@@ -304,7 +304,11 @@
       Fill the form below. We will not call you. We will not email you.
       We will, however, expect you to show up at the next panchayat with a plate of jalebi.
     </p>
-    <form class="join__form" id="join-form" novalidate>
+    <form class="join__form" id="join-form" name="jjp-signup" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+      <input type="hidden" name="form-name" value="jjp-signup" />
+      <p class="honeypot" aria-hidden="true">
+        <label>Don't fill this: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+      </p>
       <div class="row">
         <label>
           <span>Naam (Name)</span>
@@ -346,6 +350,9 @@
       <button type="submit" class="btn btn--primary btn--big">Become a Choudhary</button>
       <p class="join__success" id="join-success" hidden>
         🎉 Welcome to the JJP, <strong id="join-name">bhai</strong>! Your provisional membership #<span id="join-id">000000</span> is approved. The buffalo is en route.
+      </p>
+      <p class="error" id="join-error" hidden>
+        Arre, signup failed. Please try again — Choudhary saab's WiFi may be down.
       </p>
     </form>
   </div>

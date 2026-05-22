@@ -638,6 +638,17 @@ a:hover { text-decoration: underline; }
   font-size: 0.95rem;
 }
 .join__form .check input { width: auto; }
+.join__form .honeypot { position: absolute; left: -9999px; opacity: 0; pointer-events: none; }
+.join__form .error {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  background: #FBE9E7;
+  border: 2px dashed var(--red);
+  border-radius: 10px;
+  color: var(--red);
+  text-align: center;
+  font-weight: 600;
+}
 .join__form .check span { margin: 0; color: var(--mitti); }
 .join__success {
   margin-top: 1rem;

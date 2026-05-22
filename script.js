@@ -1,6 +1,32 @@
-// JJP — Jaat Janta Party (Parody) — minor interactivity
+// JJP — Jaat Janta Party (Parody) — minor interactivity + real counts
 
 document.getElementById('year').textContent = new Date().getFullYear();
+
+const memberEl = document.getElementById('count-members');
+const lassiEl = document.getElementById('count-lassi');
+const villageEl = document.getElementById('count-villages');
+
+/* ====== Fetch real signup count from Netlify Function ====== */
+let memberBase = 342108; // fallback; overwritten by /.netlify/functions/count
+
+async function loadRealCount() {
+  try {
+    const res = await fetch('/.netlify/functions/count', { cache: 'no-store' });
+    if (!res.ok) return;
+    const json = await res.json();
+    if (typeof json.count === 'number') {
+      memberBase = json.count;
+      if (memberEl) memberEl.textContent = memberBase.toLocaleString('en-IN');
+
+      // Also point the Numbers section "Card-carrying members" tile at real count
+      const tile = document.querySelector('.numbers__grid strong[data-target]');
+      if (tile) tile.dataset.target = String(memberBase);
+    }
+  } catch (e) {
+    // Silently fall back to the seeded value
+  }
+}
+loadRealCount();
 
 /* ====== Animated counters in the "Numbers" section ====== */
 const counters = document.querySelectorAll('.numbers__grid strong[data-target]');
@@ -33,12 +59,7 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.4 });
 counters.forEach((c) => observer.observe(c));
 
-/* ====== Live "members" counter in the hero ticks slowly upward ====== */
-let memberBase = 342108;
-const memberEl = document.getElementById('count-members');
-const lassiEl = document.getElementById('count-lassi');
-const villageEl = document.getElementById('count-villages');
-
+/* ====== Hero ticking counters (cosmetic) ====== */
 setInterval(() => {
   memberBase += Math.floor(Math.random() * 4) + 1;
   if (memberEl) memberEl.textContent = memberBase.toLocaleString('en-IN');
@@ -58,20 +79,59 @@ setInterval(() => {
   }
 }, 5200);
 
-/* ====== Mock signup form ====== */
+/* ====== Form submission — posts to Netlify Forms ====== */
 const form = document.getElementById('join-form');
+const successEl = document.getElementById('join-success');
+const errorEl = document.getElementById('join-error');
+
 if (form) {
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    successEl.hidden = true;
+    errorEl.hidden = true;
+
+    // Spam check: honeypot field must be empty
     const data = new FormData(form);
-    const name = (data.get('name') || 'bhai').toString().trim();
-    const id = Math.floor(100000 + Math.random() * 899999);
-    document.getElementById('join-name').textContent = name || 'bhai';
-    document.getElementById('join-id').textContent = id;
-    const success = document.getElementById('join-success');
-    success.hidden = false;
-    success.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    form.querySelectorAll('input[type="text"], input:not([type]), textarea').forEach((i) => (i.value = ''));
+    if (data.get('bot-field')) {
+      // Looks like a bot. Pretend success, don't actually submit.
+      successEl.hidden = false;
+      return;
+    }
+
+    // Netlify Forms expects URL-encoded POST to the page itself
+    const body = new URLSearchParams(data).toString();
+
+    const btn = form.querySelector('button[type="submit"]');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Joining…';
+
+    try {
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+      });
+      if (!res.ok) throw new Error('Submit failed: ' + res.status);
+
+      const name = (data.get('name') || 'bhai').toString().trim() || 'bhai';
+      const id = Math.floor(100000 + Math.random() * 899999);
+      document.getElementById('join-name').textContent = name;
+      document.getElementById('join-id').textContent = id;
+      successEl.hidden = false;
+      successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Optimistic bump on the live counter
+      memberBase += 1;
+      if (memberEl) memberEl.textContent = memberBase.toLocaleString('en-IN');
+
+      form.reset();
+    } catch (err) {
+      errorEl.hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
   });
 }
 
