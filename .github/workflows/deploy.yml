@@ -85,9 +85,11 @@ jobs:
               -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
               "https://api.netlify.com/api/v1/accounts/$ACCOUNT_SLUG/env/$KEY?site_id=$NETLIFY_SITE_ID" \
               -o /dev/null || true
+            # Note: 'scopes' field requires a paid Netlify plan. Omitting it
+            # uses the free-tier default (var available to all scopes).
             local PAYLOAD
             PAYLOAD=$(jq -n --arg k "$KEY" --arg v "$VAL" \
-              '[{key:$k, values:[{value:$v, context:"all"}], scopes:["functions","runtime","builds","post-processing"]}]')
+              '[{key:$k, values:[{value:$v, context:"all"}]}]')
             local CODE
             CODE=$(curl -sS -o /tmp/resp.json -w "%{http_code}" -X POST \
               -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
