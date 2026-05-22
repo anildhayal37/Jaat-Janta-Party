@@ -12,7 +12,8 @@ const FORM_NAME = "jjp-signup";
 
 export default async (req, context) => {
   const token = process.env.NETLIFY_AUTH_TOKEN;
-  const siteId = process.env.SITE_ID;
+  // SITE_ID is reserved/auto-injected by Netlify into functions; fall back to context.site.id.
+  const siteId = process.env.SITE_ID || context?.site?.id;
 
   const headers = {
     "content-type": "application/json",

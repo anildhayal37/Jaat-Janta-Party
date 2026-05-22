@@ -102,8 +102,9 @@ jobs:
             fi
           }
 
+          # SITE_ID is reserved by Netlify (auto-injected into functions),
+          # so we don't set it here — functions read process.env.SITE_ID directly.
           upsert NETLIFY_AUTH_TOKEN "$NETLIFY_AUTH_TOKEN"
-          upsert SITE_ID "$NETLIFY_SITE_ID"
           upsert ADMIN_KEY "$ADMIN_KEY"
 
           # Stash the (possibly random) admin key for the summary step

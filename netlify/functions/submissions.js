@@ -21,7 +21,7 @@ const safeEq = (a, b) => {
 
 export default async (req, context) => {
   const token = process.env.NETLIFY_AUTH_TOKEN;
-  const siteId = process.env.SITE_ID;
+  const siteId = process.env.SITE_ID || context?.site?.id;
   const adminKey = process.env.ADMIN_KEY;
 
   const url = new URL(req.url);
