@@ -3,16 +3,14 @@
 //
 // Required env vars (set in Netlify → Site settings → Environment variables):
 //   NETLIFY_AUTH_TOKEN  — Personal Access Token from app.netlify.com/user/applications
-//   SITE_ID             — Your site's API ID (Site settings → General → Site information)
+//   SITE_ID             — Auto-injected by Netlify; falls back to context.site.id
 //
-// If env vars are missing, returns a fallback count so the page still works.
+// If env vars are missing or the API fails, returns 0 so the page still renders.
 
-const FALLBACK_COUNT = 342108;
 const FORM_NAME = "jjp-signup";
 
 export default async (req, context) => {
   const token = process.env.NETLIFY_AUTH_TOKEN;
-  // SITE_ID is reserved/auto-injected by Netlify into functions; fall back to context.site.id.
   const siteId = process.env.SITE_ID || context?.site?.id;
 
   const headers = {
@@ -23,7 +21,7 @@ export default async (req, context) => {
 
   if (!token || !siteId) {
     return new Response(
-      JSON.stringify({ count: FALLBACK_COUNT, source: "fallback", note: "Set NETLIFY_AUTH_TOKEN and SITE_ID in Netlify env vars to show real count." }),
+      JSON.stringify({ count: 0, source: "fallback", note: "Set NETLIFY_AUTH_TOKEN in Netlify env vars to show real count." }),
       { status: 200, headers }
     );
   }
@@ -35,7 +33,7 @@ export default async (req, context) => {
 
     if (!res.ok) {
       return new Response(
-        JSON.stringify({ count: FALLBACK_COUNT, source: "fallback", error: `Netlify API ${res.status}` }),
+        JSON.stringify({ count: 0, source: "fallback", error: `Netlify API ${res.status}` }),
         { status: 200, headers }
       );
     }
@@ -44,17 +42,13 @@ export default async (req, context) => {
     const form = Array.isArray(forms) ? forms.find((f) => f.name === FORM_NAME) : null;
     const realCount = form?.submission_count ?? 0;
 
-    // Add a small flair so the public number stays a satisfying big number,
-    // while still being driven by real signups. (It's a parody site.)
-    const displayed = FALLBACK_COUNT + realCount;
-
     return new Response(
-      JSON.stringify({ count: displayed, real: realCount, source: "netlify-forms" }),
+      JSON.stringify({ count: realCount, source: "netlify-forms" }),
       { status: 200, headers }
     );
   } catch (err) {
     return new Response(
-      JSON.stringify({ count: FALLBACK_COUNT, source: "fallback", error: String(err) }),
+      JSON.stringify({ count: 0, source: "fallback", error: String(err) }),
       { status: 200, headers }
     );
   }

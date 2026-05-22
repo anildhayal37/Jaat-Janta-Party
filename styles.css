@@ -639,6 +639,15 @@ a:hover { text-decoration: underline; }
 }
 .join__form .check input { width: auto; }
 .join__form .honeypot { position: absolute; left: -9999px; opacity: 0; pointer-events: none; }
+.join__form .captcha {
+  background: #FFF8E1;
+  border: 2px dashed var(--mustard, #f1a93a);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+}
+.join__form .captcha strong { color: var(--red, #c8252e); font-size: 1.1rem; padding: 0 0.15rem; }
+.join__form .captcha input { max-width: 12rem; }
 .join__form .error {
   margin-top: 1rem;
   padding: 0.8rem 1rem;

@@ -7,7 +7,7 @@ const lassiEl = document.getElementById('count-lassi');
 const villageEl = document.getElementById('count-villages');
 
 /* ====== Fetch real signup count from Netlify Function ====== */
-let memberBase = 342108; // fallback; overwritten by /.netlify/functions/count
+let memberBase = 0; // real count; overwritten by /.netlify/functions/count
 
 async function loadRealCount() {
   try {
@@ -23,7 +23,7 @@ async function loadRealCount() {
       if (tile) tile.dataset.target = String(memberBase);
     }
   } catch (e) {
-    // Silently fall back to the seeded value
+    // Silently fall back to 0
   }
 }
 loadRealCount();
@@ -59,12 +59,7 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.4 });
 counters.forEach((c) => observer.observe(c));
 
-/* ====== Hero ticking counters (cosmetic) ====== */
-setInterval(() => {
-  memberBase += Math.floor(Math.random() * 4) + 1;
-  if (memberEl) memberEl.textContent = memberBase.toLocaleString('en-IN');
-}, 2400);
-
+/* ====== Hero ticking counters (cosmetic, non-member numbers only) ====== */
 let lassiBase = 82919;
 setInterval(() => {
   lassiBase += Math.floor(Math.random() * 7) + 1;
@@ -84,21 +79,47 @@ const form = document.getElementById('join-form');
 const successEl = document.getElementById('join-success');
 const errorEl = document.getElementById('join-error');
 
+/* ====== Math captcha: regenerated on load + after each attempt ====== */
+const captchaAEl = document.getElementById('captcha-a');
+const captchaBEl = document.getElementById('captcha-b');
+const captchaInputEl = document.getElementById('captcha-input');
+let captchaAnswer = 0;
+function newCaptcha() {
+  const a = Math.floor(Math.random() * 9) + 1;
+  const b = Math.floor(Math.random() * 9) + 1;
+  if (captchaAEl) captchaAEl.textContent = a;
+  if (captchaBEl) captchaBEl.textContent = b;
+  if (captchaInputEl) captchaInputEl.value = '';
+  captchaAnswer = a + b;
+}
+newCaptcha();
+
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     successEl.hidden = true;
     errorEl.hidden = true;
 
-    // Spam check: honeypot field must be empty
     const data = new FormData(form);
+
+    // Spam check 1: honeypot field must be empty
     if (data.get('bot-field')) {
       // Looks like a bot. Pretend success, don't actually submit.
       successEl.hidden = false;
       return;
     }
 
-    // Netlify Forms expects URL-encoded POST to the page itself
+    // Spam check 2: math captcha
+    const captchaGiven = parseInt(data.get('captcha'), 10);
+    if (captchaGiven !== captchaAnswer) {
+      errorEl.textContent = 'Galat jawab bhai. Captcha bohot easy hai — dobara try kar.';
+      errorEl.hidden = false;
+      newCaptcha();
+      return;
+    }
+
+    // Strip the captcha field before submitting — it's not part of the real signup
+    data.delete('captcha');
     const body = new URLSearchParams(data).toString();
 
     const btn = form.querySelector('button[type="submit"]');
@@ -115,19 +136,22 @@ if (form) {
       if (!res.ok) throw new Error('Submit failed: ' + res.status);
 
       const name = (data.get('name') || 'bhai').toString().trim() || 'bhai';
-      const id = Math.floor(100000 + Math.random() * 899999);
-      document.getElementById('join-name').textContent = name;
-      document.getElementById('join-id').textContent = id;
-      successEl.hidden = false;
-      successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      // Optimistic bump on the live counter
+      // Optimistic bump on the live counter; the membership # IS that count
       memberBase += 1;
       if (memberEl) memberEl.textContent = memberBase.toLocaleString('en-IN');
 
+      document.getElementById('join-name').textContent = name;
+      document.getElementById('join-id').textContent = memberBase;
+      successEl.hidden = false;
+      successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
       form.reset();
+      newCaptcha();
     } catch (err) {
+      errorEl.textContent = "Arre, signup failed. Please try again — Choudhary saab's WiFi may be down.";
       errorEl.hidden = false;
+      newCaptcha();
     } finally {
       btn.disabled = false;
       btn.textContent = original;

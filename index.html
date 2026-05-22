@@ -67,7 +67,7 @@
       <a href="#manifesto" class="btn btn--ghost">Read the Manifesto</a>
     </div>
     <div class="hero__stats">
-      <div><strong id="count-members">3,42,108</strong><span>Members &amp; growing</span></div>
+      <div><strong id="count-members">0</strong><span>Members &amp; growing</span></div>
       <div><strong id="count-villages">11,734</strong><span>Villages on board</span></div>
       <div><strong id="count-lassi">82,919 L</strong><span>Lassi consumed today</span></div>
     </div>
@@ -346,6 +346,10 @@
       <label class="check">
         <input type="checkbox" required />
         <span>I solemnly swear I will not eat dal makhani with a fork.</span>
+      </label>
+      <label class="full captcha">
+        <span>Insaan check — what is <strong id="captcha-a">?</strong> + <strong id="captcha-b">?</strong>?</span>
+        <input name="captcha" id="captcha-input" type="number" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required placeholder="Jawab likho…" />
       </label>
       <button type="submit" class="btn btn--primary btn--big">Become a Choudhary</button>
       <p class="join__success" id="join-success" hidden>
